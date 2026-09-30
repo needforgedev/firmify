@@ -1,15 +1,21 @@
 import Link from "next/link";
 import { DOC_BY_SLUG } from "@/data/firmify-data";
 import { employmentAgreement } from "@/lib/templates/employment-agreement";
+import { vendorAgreement } from "@/lib/templates/vendor-agreement";
+import { foundersAgreement } from "@/lib/templates/founders-agreement";
+import { rentAgreement } from "@/lib/templates/rent-agreement";
 import type { Template } from "@/lib/types";
 import { DocumentWizard } from "@/components/wizard/DocumentWizard";
 
-// Questionnaire templates authored so far. Every catalogue document gets one of
-// these (built via the future admin CMS); the Employment Contract is the
-// reference implementation exercising all engine features.
+// Questionnaire templates authored so far — one demo document per main-page
+// category. Every catalogue document eventually gets one of these, built via
+// the future admin CMS.
 const TEMPLATES: Record<string, Template> = {
-  "employment-contract-india": employmentAgreement,
+  "employment-contract-india": employmentAgreement, // HR & Employment
   "employment-agreement": employmentAgreement,
+  "vendor-agreement": vendorAgreement, // Company Contracts & Policies
+  "founders-agreement": foundersAgreement, // Startup & Fundraising
+  "residential-rent-agreement-india": rentAgreement, // Property & Personal
 };
 
 export async function generateMetadata({ params }: PageProps<"/create/[slug]">) {
@@ -37,12 +43,24 @@ export default async function CreatePage({ params }: PageProps<"/create/[slug]">
           <p className="mt-2.5 text-base text-[#7A5400]">
             Each of the 224 documents gets its own guided questionnaire with conditional logic,
             clause options and guidance notes, authored in the admin CMS from the law firm&rsquo;s
-            draft. The reference questionnaire is live on{" "}
+            draft. Four demo questionnaires are live &mdash; one per category:{" "}
             <Link href="/create/employment-contract-india" className="font-bold text-brand">
               Employment Contract &ndash; India
+            </Link>
+            ,{" "}
+            <Link href="/create/vendor-agreement" className="font-bold text-brand">
+              Vendor Agreement
+            </Link>
+            ,{" "}
+            <Link href="/create/founders-agreement" className="font-bold text-brand">
+              Founders&rsquo; Agreement
             </Link>{" "}
-            &mdash; try it to see the full flow: guided questions, live preview, restricted
-            preview, payment unlock, Word/PDF download and e-sign.
+            and{" "}
+            <Link href="/create/residential-rent-agreement-india" className="font-bold text-brand">
+              Residential Rent Agreement &ndash; India
+            </Link>{" "}
+            &mdash; try any of them to see the full flow: guided questions, live preview,
+            restricted preview, payment unlock, Word/PDF download and e-sign.
           </p>
         </div>
         <Link

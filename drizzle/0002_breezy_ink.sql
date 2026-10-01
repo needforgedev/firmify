@@ -1,0 +1,2 @@
+ALTER TABLE "templates" ADD COLUMN "published_version_id" uuid;--> statement-breakpoint
+ALTER TABLE "templates" ADD CONSTRAINT "templates_published_version_id_template_versions_id_fk" FOREIGN KEY ("published_version_id") REFERENCES "public"."template_versions"("id") ON DELETE set null ON UPDATE no action;

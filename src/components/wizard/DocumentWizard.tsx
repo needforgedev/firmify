@@ -14,7 +14,7 @@ type Mode = "wizard" | "preview";
 
 export function DocumentWizard({ slug, template }: { slug: string; template: Template }) {
   const router = useRouter();
-  const { store, ready, entitledTo, upsertDraft, recordDownload } = useStore();
+  const { store, draftsReady, entitledTo, upsertDraft, recordDownload } = useStore();
   const doc = DOC_BY_SLUG[slug];
   const pack = doc
     ? PACKS.find((p) => p.id !== "all-documents-pack" && p.cats.some((c) => doc.cats.includes(c)))
@@ -28,19 +28,20 @@ export function DocumentWizard({ slug, template }: { slug: string; template: Tem
   const [mobilePreview, setMobilePreview] = useState(false);
   const loaded = useRef(false);
 
-  const unlocked = ready && entitledTo(slug);
+  const unlocked = draftsReady && entitledTo(slug);
   const title = doc?.name ?? template.title;
 
-  // Resume draft once the store has hydrated.
+  // Resume the draft once drafts are loaded for the current auth state
+  // (localStorage when anonymous, the Supabase documents table when signed in).
   useEffect(() => {
-    if (!ready || loaded.current) return;
+    if (!draftsReady || loaded.current) return;
     const draft = store.drafts.find((d) => d.slug === slug);
     if (draft) {
       setAnswers(draft.answers);
       if (draft.pct >= 100) setMode("preview");
     }
     loaded.current = true;
-  }, [ready, store.drafts, slug]);
+  }, [draftsReady, store.drafts, slug]);
 
   const rendered = useMemo(() => renderDocument(template, answers), [template, answers]);
   const pct = progress(template, answers);
@@ -54,9 +55,11 @@ export function DocumentWizard({ slug, template }: { slug: string; template: Tem
     [template, step, answers]
   );
 
-  // Autosave to the shared store (mirrors the future Supabase drafts table).
+  // Autosave — to the Supabase documents table when signed in (debounced in
+  // the store), localStorage otherwise. Pristine wizards are never saved.
   useEffect(() => {
     if (!loaded.current) return;
+    if (Object.keys(answers).length === 0 && mode === "wizard") return;
     upsertDraft(slug, title, mode === "preview" ? 100 : pct, answers);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [answers, mode]);

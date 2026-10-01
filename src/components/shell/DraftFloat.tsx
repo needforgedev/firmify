@@ -6,10 +6,10 @@ import { useStore } from "@/lib/store";
 
 export function DraftFloat() {
   const router = useRouter();
-  const { activeDraft, ready } = useStore();
+  const { activeDraft, draftsReady } = useStore();
   const [hidden, setHidden] = useState(false);
 
-  const draft = ready ? activeDraft() : null;
+  const draft = draftsReady ? activeDraft() : null;
   if (!draft || hidden) return null;
 
   return (

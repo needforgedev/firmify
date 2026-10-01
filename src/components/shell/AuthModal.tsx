@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import { useStore } from "@/lib/store";
 
 const inputClass =
@@ -9,32 +10,69 @@ const inputClass =
 
 export function AuthModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const router = useRouter();
-  const { store, completeAuth, logOut } = useStore();
+  const { store, logOut } = useStore();
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [pass, setPass] = useState("");
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [confirmSent, setConfirmSent] = useState(false);
 
   if (!open) return null;
 
   const isSignup = mode === "signup";
 
-  const submit = () => {
+  const submit = async () => {
     const trimmed = email.trim();
+    setNotice("");
     if (isSignup && !name.trim()) return setError("Please enter your full name.");
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) return setError("Please enter a valid email address.");
     if (isSignup && phone.replace(/\D/g, "").length < 10) return setError("Please enter a 10-digit mobile number.");
     if (pass.length < 8) return setError("Password must be at least 8 characters.");
-    completeAuth({
-      name: isSignup ? name.trim() : store.user?.name || trimmed.split("@")[0],
-      email: trimmed,
-      phone,
-    });
+
     setError("");
-    setPass("");
-    onClose();
+    setBusy(true);
+    const supabase = createClient();
+    try {
+      if (isSignup) {
+        const { data, error: err } = await supabase.auth.signUp({
+          email: trimmed,
+          password: pass,
+          options: {
+            data: { full_name: name.trim(), phone },
+            emailRedirectTo: `${location.origin}/auth/callback`,
+          },
+        });
+        if (err) return setError(err.message);
+        if (!data.session) {
+          // Email confirmation is on — no session until the link is clicked.
+          setConfirmSent(true);
+          return;
+        }
+      } else {
+        const { error: err } = await supabase.auth.signInWithPassword({
+          email: trimmed,
+          password: pass,
+        });
+        if (err) return setError(err.message);
+      }
+      setPass("");
+      onClose();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const googleSignIn = async () => {
+    setError("");
+    const { error: err } = await createClient().auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${location.origin}/auth/callback` },
+    });
+    if (err) setError(err.message);
   };
 
   const tab = (on: boolean) =>
@@ -84,9 +122,11 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  logOut();
+                onClick={async () => {
+                  await logOut();
                   setMode("login");
+                  setPass("");
+                  onClose();
                 }}
                 className="rounded-[10px] px-3.5 py-[13px] text-left text-base font-bold text-[#B42318] hover:bg-[#FEF3F2]"
               >
@@ -94,6 +134,29 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
               </button>
             </div>
           </>
+        ) : confirmSent ? (
+          <div className="px-[22px] py-7 text-center">
+            <span className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full bg-[#EFFAF2] text-2xl">
+              ✉️
+            </span>
+            <h2 className="font-display text-[22px] font-extrabold text-navy">Confirm your email</h2>
+            <p className="mt-2.5 text-[15px] leading-[1.55] text-[#5B6B86]">
+              We&rsquo;ve sent a confirmation link to{" "}
+              <strong className="text-navy">{email.trim()}</strong>. Click it to activate your
+              account, then log in.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setConfirmSent(false);
+                setMode("login");
+                setPass("");
+              }}
+              className="mt-5 h-12 w-full rounded-[11px] bg-brand font-display text-base font-extrabold text-white hover:bg-brand-dark"
+            >
+              Back to log in
+            </button>
+          </div>
         ) : (
           <>
             <div className="flex items-start justify-between gap-3 px-[22px] pt-5">
@@ -148,7 +211,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
                 <input
                   value={pass}
                   onChange={(e) => setPass(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && submit()}
+                  onKeyDown={(e) => e.key === "Enter" && !busy && submit()}
                   type="password"
                   placeholder="At least 8 characters"
                   className={inputClass}
@@ -157,12 +220,16 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
               {error && (
                 <p className="rounded-[9px] border border-[#FBD5D0] bg-[#FEF3F2] px-3 py-2.5 text-sm text-[#B42318]">{error}</p>
               )}
+              {notice && (
+                <p className="rounded-[9px] border border-[#D6E0F2] bg-[#EEF3FC] px-3 py-2.5 text-sm text-[#14307F]">{notice}</p>
+              )}
               <button
                 type="button"
                 onClick={submit}
-                className="h-[50px] rounded-[11px] bg-brand font-display text-[16.5px] font-extrabold text-white hover:bg-brand-dark"
+                disabled={busy}
+                className="h-[50px] rounded-[11px] bg-brand font-display text-[16.5px] font-extrabold text-white hover:bg-brand-dark disabled:opacity-60"
               >
-                {isSignup ? "Create account" : "Log in"}
+                {busy ? "Please wait…" : isSignup ? "Create account" : "Log in"}
               </button>
               <div className="flex items-center gap-2.5">
                 <span className="h-px flex-1 bg-[#E4EAF6]" />
@@ -172,20 +239,16 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
               <div className="grid grid-cols-2 gap-2.5">
                 <button
                   type="button"
-                  onClick={() => {
-                    completeAuth({ name: name || "Firmify user", email: email || "you@company.in" });
-                    onClose();
-                  }}
+                  onClick={googleSignIn}
                   className="h-[46px] rounded-[10px] border border-[#D6E0F2] bg-white text-[15px] font-bold text-[#0B1F4B] hover:bg-background"
                 >
                   Google
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    completeAuth({ name: name || "Firmify user", email: email || "you@company.in", phone });
-                    onClose();
-                  }}
+                  onClick={() =>
+                    setNotice("Mobile OTP sign-in will be enabled once an SMS provider is configured in Supabase.")
+                  }
                   className="h-[46px] rounded-[10px] border border-[#D6E0F2] bg-white text-[15px] font-bold text-[#0B1F4B] hover:bg-background"
                 >
                   Mobile OTP

@@ -10,13 +10,13 @@ const fmt = (t: number) =>
 
 export default function Dashboard() {
   const router = useRouter();
-  const { store, ready, reset } = useStore();
+  const { store, draftsReady, reset } = useStore();
 
   const drafts = store.drafts.slice().sort((a, b) => b.at - a.at);
   const open = drafts.filter((d) => d.pct < 100);
   const done = drafts.filter((d) => d.pct >= 100);
 
-  if (!ready) return <div className="min-h-[50vh]" />;
+  if (!draftsReady) return <div className="min-h-[50vh]" />;
 
   return (
     <div className="mx-auto w-full max-w-[1160px] px-[clamp(16px,4vw,26px)] pb-[clamp(44px,5vw,70px)] pt-[26px]">

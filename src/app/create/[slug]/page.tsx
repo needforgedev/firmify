@@ -1,22 +1,12 @@
 import Link from "next/link";
 import { DOC_BY_SLUG } from "@/data/firmify-data";
-import { employmentContractIndia } from "@/lib/templates/employment-contract-india";
-import { vendorAgreement } from "@/lib/templates/vendor-agreement";
-import { foundersAgreement } from "@/lib/templates/founders-agreement";
-import { rentAgreement } from "@/lib/templates/rent-agreement";
-import type { Template } from "@/lib/types";
+import { fetchPublishedTemplate, listPublishedTemplates } from "@/lib/templatesApi";
 import { DocumentWizard } from "@/components/wizard/DocumentWizard";
 
-// Questionnaire templates authored so far — one demo document per main-page
-// category, keyed by catalogue slug. Every catalogue document eventually gets
-// one of these, built via the future admin CMS. Keep in sync with
-// scripts/seed.ts (DEMO_TEMPLATES).
-const TEMPLATES: Record<string, Template> = {
-  "employment-contract-india": employmentContractIndia, // HR & Employment
-  "vendor-agreement": vendorAgreement, // Company Contracts & Policies
-  "founders-agreement": foundersAgreement, // Startup & Fundraising
-  "residential-rent-agreement-india": rentAgreement, // Property & Personal
-};
+// The questionnaire comes from the database (templates + the published
+// template_versions row) — nothing here imports the authored template files,
+// so clause content stays out of the client bundle and the admin CMS can
+// publish new questionnaires without a deploy.
 
 export async function generateMetadata({ params }: PageProps<"/create/[slug]">) {
   const { slug } = await params;
@@ -26,10 +16,11 @@ export async function generateMetadata({ params }: PageProps<"/create/[slug]">) 
 
 export default async function CreatePage({ params }: PageProps<"/create/[slug]">) {
   const { slug } = await params;
-  const template = TEMPLATES[slug];
   const doc = DOC_BY_SLUG[slug];
+  const template = await fetchPublishedTemplate(slug);
 
   if (!template) {
+    const demos = await listPublishedTemplates();
     return (
       <div className="mx-auto max-w-3xl px-[clamp(16px,4vw,26px)] py-14">
         <nav aria-label="Breadcrumb" className="mb-3.5 text-sm text-[#5B6B86]">
@@ -43,24 +34,22 @@ export default async function CreatePage({ params }: PageProps<"/create/[slug]">
           <p className="mt-2.5 text-base text-[#7A5400]">
             Each of the 224 documents gets its own guided questionnaire with conditional logic,
             clause options and guidance notes, authored in the admin CMS from the law firm&rsquo;s
-            draft. Four demo questionnaires are live &mdash; one per category:{" "}
-            <Link href="/create/employment-contract-india" className="font-bold text-brand">
-              Employment Contract &ndash; India
-            </Link>
-            ,{" "}
-            <Link href="/create/vendor-agreement" className="font-bold text-brand">
-              Vendor Agreement
-            </Link>
-            ,{" "}
-            <Link href="/create/founders-agreement" className="font-bold text-brand">
-              Founders&rsquo; Agreement
-            </Link>{" "}
-            and{" "}
-            <Link href="/create/residential-rent-agreement-india" className="font-bold text-brand">
-              Residential Rent Agreement &ndash; India
-            </Link>{" "}
-            &mdash; try any of them to see the full flow: guided questions, live preview,
-            restricted preview, payment unlock, Word/PDF download and e-sign.
+            draft. {demos.length > 0 && "These questionnaires are live today:"}
+          </p>
+          {demos.length > 0 && (
+            <ul className="mt-3 list-disc space-y-1.5 pl-5 text-base">
+              {demos.map((d) => (
+                <li key={d.slug}>
+                  <Link href={`/create/${d.slug}`} className="font-bold text-brand">
+                    {d.title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+          <p className="mt-3 text-base text-[#7A5400]">
+            Try any of them to see the full flow: guided questions, live preview, restricted
+            preview, payment unlock, Word/PDF download and e-sign.
           </p>
         </div>
         <Link

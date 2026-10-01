@@ -1,5 +1,8 @@
 import type { Template } from "../types";
 
+// AUTHORING SOURCE ONLY — seeded into the DB by scripts/seed.ts; the app
+// renders questionnaires from template_versions, never from this file.
+//
 // Demo template for the Company Contracts & Policies category.
 // Exercises: variants (term, payment days), conditional clause (SLA),
 // repeat group (deliverables).

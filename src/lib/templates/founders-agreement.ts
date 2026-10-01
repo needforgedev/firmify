@@ -1,5 +1,8 @@
 import type { Template } from "../types";
 
+// AUTHORING SOURCE ONLY — seeded into the DB by scripts/seed.ts; the app
+// renders questionnaires from template_versions, never from this file.
+//
 // Demo template for the Startup & Fundraising category.
 // Exercises: repeat group as the core of the document (founders), conditional
 // vesting block, IP variants, conditional non-compete.

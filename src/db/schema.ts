@@ -152,8 +152,13 @@ export const templateCategories = pgTable(
 );
 
 /**
- * Append-only. Holds the questionnaire + clause tree (the paid text).
- * NO client read policies — server-only via the service-role key.
+ * Append-only. Holds the questionnaire + clause tree.
+ *
+ * Read access: only the row a published template points at via
+ * published_version_id is readable (decision 2026-10-01: the document renders
+ * fully in the live preview, so published clause content is public —
+ * protection applies at download/checkout, not at reading). Draft and
+ * historical versions stay unreadable from the app.
  */
 export const templateVersions = pgTable(
   "template_versions",
@@ -174,8 +179,18 @@ export const templateVersions = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     publishedAt: timestamp("published_at", { withTimezone: true }),
   },
-  (t) => [uniqueIndex("template_versions_unique_idx").on(t.templateId, t.version)]
-).enableRLS();
+  (t) => [
+    uniqueIndex("template_versions_unique_idx").on(t.templateId, t.version),
+    pgPolicy("template_versions_published_read", {
+      for: "select",
+      to: [anonRole, authenticatedRole],
+      using: sql`exists (
+        select 1 from public.templates tp
+        where tp.published_version_id = ${t.id} and tp.status = 'published'
+      )`,
+    }),
+  ]
+);
 
 export const packs = pgTable(
   "packs",

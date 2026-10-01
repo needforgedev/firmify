@@ -1,5 +1,8 @@
 import type { Template } from "../types";
 
+// AUTHORING SOURCE ONLY — seeded into the DB by scripts/seed.ts; the app
+// renders questionnaires from template_versions, never from this file.
+//
 // Demo template for the HR & Employment category. Real clause text will come
 // from the client's law-firm drafts; this content exists to exercise every
 // mechanism of the engine: placeholders, conditional questions, conditional

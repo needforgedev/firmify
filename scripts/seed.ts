@@ -12,7 +12,7 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as t from "../src/db/schema";
 import { CATEGORIES, DOCUMENTS, PACKS } from "../src/data/firmify-data";
-import { employmentAgreement } from "../src/lib/templates/employment-agreement";
+import { employmentContractIndia } from "../src/lib/templates/employment-contract-india";
 import { vendorAgreement } from "../src/lib/templates/vendor-agreement";
 import { foundersAgreement } from "../src/lib/templates/founders-agreement";
 import { rentAgreement } from "../src/lib/templates/rent-agreement";
@@ -20,7 +20,7 @@ import type { Template } from "../src/lib/types";
 
 // Catalog slug → authored questionnaire (mirrors src/app/create/[slug]/page.tsx).
 const DEMO_TEMPLATES: Record<string, Template> = {
-  "employment-contract-india": employmentAgreement,
+  "employment-contract-india": employmentContractIndia,
   "vendor-agreement": vendorAgreement,
   "founders-agreement": foundersAgreement,
   "residential-rent-agreement-india": rentAgreement,

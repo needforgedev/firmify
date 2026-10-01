@@ -1,12 +1,13 @@
 import type { Template } from "../types";
 
-// Demo template. Real clause text will come from the client's law-firm drafts;
-// this content exists to exercise every mechanism of the engine:
-// placeholders, conditional questions, conditional clauses, variants, repeats.
+// Demo template for the HR & Employment category. Real clause text will come
+// from the client's law-firm drafts; this content exists to exercise every
+// mechanism of the engine: placeholders, conditional questions, conditional
+// clauses, variants, repeats.
 
-export const employmentAgreement: Template = {
-  slug: "employment-agreement",
-  title: "Employment Agreement (India)",
+export const employmentContractIndia: Template = {
+  slug: "employment-contract-india",
+  title: "Employment Contract – India",
   version: 1,
   category: "HR & Employment",
   description:

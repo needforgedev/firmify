@@ -5,9 +5,12 @@
 // - `template_versions` is append-only; a user document pins the exact version
 //   it was generated from, so later template edits never change purchased docs.
 // - RLS: tables that carry a pgPolicy get RLS enabled automatically by Drizzle;
-//   tables with `.enableRLS()` and no policies are server-only (the service-role
-//   key bypasses RLS). Paid clause text lives in `template_versions`, which has
-//   NO client policies — it must only ever be read server-side.
+//   tables with `.enableRLS()` and no policies are unreachable from the app
+//   entirely (the app holds no service-role key — every query runs under the
+//   user's JWT). Only migrations/seeding touch them, over DATABASE_URL.
+//   Paid clause text lives in `template_versions`, which has NO client
+//   policies — gated rendering will expose it via entitlement-checked
+//   policies or SECURITY DEFINER functions in a later phase.
 
 import { sql } from "drizzle-orm";
 import {

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { DOC_BY_SLUG } from "@/data/firmify-data";
-import { employmentAgreement } from "@/lib/templates/employment-agreement";
+import { employmentContractIndia } from "@/lib/templates/employment-contract-india";
 import { vendorAgreement } from "@/lib/templates/vendor-agreement";
 import { foundersAgreement } from "@/lib/templates/founders-agreement";
 import { rentAgreement } from "@/lib/templates/rent-agreement";
@@ -8,11 +8,11 @@ import type { Template } from "@/lib/types";
 import { DocumentWizard } from "@/components/wizard/DocumentWizard";
 
 // Questionnaire templates authored so far — one demo document per main-page
-// category. Every catalogue document eventually gets one of these, built via
-// the future admin CMS.
+// category, keyed by catalogue slug. Every catalogue document eventually gets
+// one of these, built via the future admin CMS. Keep in sync with
+// scripts/seed.ts (DEMO_TEMPLATES).
 const TEMPLATES: Record<string, Template> = {
-  "employment-contract-india": employmentAgreement, // HR & Employment
-  "employment-agreement": employmentAgreement,
+  "employment-contract-india": employmentContractIndia, // HR & Employment
   "vendor-agreement": vendorAgreement, // Company Contracts & Policies
   "founders-agreement": foundersAgreement, // Startup & Fundraising
   "residential-rent-agreement-india": rentAgreement, // Property & Personal
